@@ -1,0 +1,96 @@
+CREATE DATABASE IF NOT EXISTS form2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE form2;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL,
+    KEY idx_password_resets_email (email)
+);
+
+CREATE TABLE IF NOT EXISTS campaigns (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    token VARCHAR(20) NOT NULL UNIQUE,
+    type VARCHAR(30) NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    thank_you_message TEXT NULL,
+    starts_at DATETIME NULL,
+    ends_at DATETIME NULL,
+    published_at DATETIME NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS campaign_blocks (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    campaign_id INT UNSIGNED NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    title VARCHAR(255) NULL,
+    content TEXT NULL,
+    media_path VARCHAR(255) NULL,
+    position INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_campaign_blocks_campaign FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS questions (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    campaign_id INT UNSIGNED NOT NULL,
+    label VARCHAR(255) NOT NULL,
+    help_text TEXT NULL,
+    type VARCHAR(40) NOT NULL,
+    is_required TINYINT(1) NOT NULL DEFAULT 0,
+    placeholder VARCHAR(255) NULL,
+    position INT UNSIGNED NOT NULL DEFAULT 0,
+    settings JSON NULL,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_questions_campaign FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS question_options (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    question_id INT UNSIGNED NOT NULL,
+    label VARCHAR(255) NOT NULL,
+    value VARCHAR(255) NOT NULL,
+    position INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_question_options_question FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS submissions (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    campaign_id INT UNSIGNED NOT NULL,
+    submitted_at DATETIME NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    CONSTRAINT fk_submissions_campaign FOREIGN KEY (campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS submission_answers (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    submission_id INT UNSIGNED NOT NULL,
+    question_id INT UNSIGNED NOT NULL,
+    value_text TEXT NULL,
+    value_json JSON NULL,
+    value_file_path VARCHAR(255) NULL,
+    original_file_name VARCHAR(255) NULL,
+    CONSTRAINT fk_submission_answers_submission FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_submission_answers_question FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+);
