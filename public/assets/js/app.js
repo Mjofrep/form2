@@ -127,9 +127,16 @@ const bootQrCodes = () => {
 
         new QRCode(node, {
             text: url,
-            width: 180,
-            height: 180,
+            width: 200,
+            height: 200,
         });
+
+        const rendered = node.querySelector('img, canvas, table');
+
+        if (rendered instanceof HTMLElement) {
+            rendered.style.display = 'block';
+            rendered.style.margin = '0 auto';
+        }
 
         node.dataset.qrLoaded = '1';
     });

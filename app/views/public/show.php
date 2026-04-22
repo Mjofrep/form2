@@ -19,7 +19,10 @@
             <div class="border rounded-4 p-3 bg-light-subtle">
                 <div class="small text-secondary text-uppercase mb-3">Compartir</div>
                 <div class="bg-white rounded-4 d-flex justify-content-center p-3 mb-3">
-                    <div data-qr-url="<?= e(full_url('c/' . $campaign['token'])) ?>"></div>
+                    <div class="qr-wrap">
+                        <div class="qr-code-node" data-qr-url="<?= e(full_url('c/' . $campaign['token'])) ?>"></div>
+                        <div class="qr-center-badge">CEO</div>
+                    </div>
                 </div>
                 <div class="small text-break"><?= e(full_url('c/' . $campaign['token'])) ?></div>
             </div>

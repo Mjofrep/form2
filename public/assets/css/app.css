@@ -32,3 +32,41 @@ body {
     object-fit: cover;
     width: 100%;
 }
+
+.qr-wrap {
+    position: relative;
+    display: inline-block;
+    width: 200px;
+    height: 200px;
+}
+
+.qr-code-node {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-center-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 54px;
+    height: 54px;
+    padding: 0 0.75rem;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 2px solid rgba(0, 0, 0, 0.08);
+    color: #111827;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    box-shadow: 0 0.25rem 0.75rem rgba(15, 23, 42, 0.12);
+    pointer-events: none;
+}
