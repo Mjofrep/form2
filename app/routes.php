@@ -12,6 +12,8 @@ $router->get('/', [HomeController::class, 'index']);
 
 $router->get('/login', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login']);
+$router->get('/set-password', [AuthController::class, 'showSetPassword']);
+$router->post('/set-password', [AuthController::class, 'setPassword']);
 $router->post('/logout', [AuthController::class, 'logout']);
 
 $router->get('/forgot-password', [PasswordResetController::class, 'showRequestForm']);

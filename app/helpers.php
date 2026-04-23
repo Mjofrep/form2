@@ -37,7 +37,19 @@ function base_url(string $path = ''): string
         return ($base !== '' ? $base : '') . '/index.php';
     }
 
-    return ($base !== '' ? $base : '') . '/index.php?path=/' . $path;
+    $query = '';
+
+    if (str_contains($path, '?')) {
+        [$path, $query] = explode('?', $path, 2);
+    }
+
+    $url = ($base !== '' ? $base : '') . '/index.php?path=/' . $path;
+
+    if ($query !== '') {
+        $url .= '&' . $query;
+    }
+
+    return $url;
 }
 
 function asset_url(string $path): string
@@ -283,4 +295,50 @@ function error_for(string $key): ?string
 function append_query(string $path, array $query): string
 {
     return $path . (str_contains($path, '?') ? '&' : '?') . http_build_query($query);
+}
+
+function password_policy_errors(string $password): array
+{
+    $errors = [];
+
+    if (strlen($password) < 12) {
+        $errors[] = 'La contraseña debe tener al menos 12 caracteres.';
+    }
+
+    if (!preg_match('/[A-Z]/', $password)) {
+        $errors[] = 'La contraseña debe incluir al menos una letra mayúscula.';
+    }
+
+    if (!preg_match('/[a-z]/', $password)) {
+        $errors[] = 'La contraseña debe incluir al menos una letra minúscula.';
+    }
+
+    if (!preg_match('/[0-9]/', $password)) {
+        $errors[] = 'La contraseña debe incluir al menos un número.';
+    }
+
+    if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+        $errors[] = 'La contraseña debe incluir al menos un carácter especial.';
+    }
+
+    return $errors;
+}
+
+function password_policy_text(): string
+{
+    return 'La contraseña debe tener 12 o más caracteres e incluir mayúsculas, minúsculas, números y caracteres especiales.';
+}
+
+function app_log(string $channel, string $message): void
+{
+    $root = dirname(__DIR__);
+    $directory = $root . '/storage/logs';
+
+    if (!is_dir($directory)) {
+        mkdir($directory, 0775, true);
+    }
+
+    $file = $directory . '/' . preg_replace('/[^a-z0-9_\-]/i', '_', $channel) . '.log';
+    $line = '[' . date('Y-m-d H:i:s') . '] ' . $message . PHP_EOL;
+    error_log($line, 3, $file);
 }

@@ -29,4 +29,15 @@ final class UserModel
         $stmt = DB::pdo()->prepare('UPDATE users SET password = :password, updated_at = NOW() WHERE id = :id');
         $stmt->execute(['password' => $hash, 'id' => $id]);
     }
+
+    public function updatePasswordByEmail(string $email, string $hash): void
+    {
+        $stmt = DB::pdo()->prepare('UPDATE users SET password = :password, updated_at = NOW() WHERE email = :email');
+        $stmt->execute(['password' => $hash, 'email' => $email]);
+    }
+
+    public function hasUsablePassword(array $user): bool
+    {
+        return trim((string) ($user['password'] ?? '')) !== '';
+    }
 }

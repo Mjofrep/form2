@@ -97,8 +97,9 @@ final class PasswordResetController
             $errors['email'] = 'Solicitud inválida.';
         }
 
-        if (strlen($password) < 8) {
-            $errors['password'] = 'La contraseña debe tener al menos 8 caracteres.';
+        foreach (password_policy_errors($password) as $error) {
+            $errors['password'] = $error;
+            break;
         }
 
         if ($password !== $passwordConfirmation) {
