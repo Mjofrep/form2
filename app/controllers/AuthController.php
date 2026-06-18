@@ -25,7 +25,6 @@ final class AuthController
 
         $email = trim((string) ($_POST['email'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
-        $user = $email !== '' ? (new UserModel())->findByEmail($email) : null;
 
         set_old_input(['email' => $email]);
 
@@ -35,69 +34,67 @@ final class AuthController
             redirect(base_url('login'));
         }
 
-        if ($user && !(new UserModel())->hasUsablePassword($user)) {
-            $_SESSION['pending_password_email'] = $email;
-            flash('info', 'Debes crear una contraseña para tu primer acceso.');
-            redirect(base_url('set-password'));
-        }
-
         if ($password === '') {
             set_validation_errors(['password' => 'Debes ingresar tu contraseña.']);
             flash('error', 'Debes ingresar la contraseña para continuar.');
             redirect(base_url('login'));
         }
 
-        if (!Auth::attempt($email, $password)) {
-            set_validation_errors(['email' => 'Las credenciales no son válidas.']);
-            flash('error', 'No fue posible iniciar sesión.');
+        $status = Auth::attempt($email, $password);
+
+        if ($status !== Auth::STATUS_SUCCESS) {
+            if ($status === Auth::STATUS_LOCKED) {
+                set_validation_errors(['email' => 'La cuenta se bloqueó temporalmente por múltiples intentos fallidos.']);
+                flash('error', 'Tu cuenta fue bloqueada temporalmente. Intenta más tarde.');
+            } elseif ($status === Auth::STATUS_INACTIVE) {
+                set_validation_errors(['email' => 'La cuenta está inactiva.']);
+                flash('error', 'Tu cuenta está inactiva. Contacta a un administrador.');
+            } else {
+                set_validation_errors(['email' => 'Las credenciales no son válidas.']);
+                flash('error', 'No fue posible iniciar sesión.');
+            }
+
             redirect(base_url('login'));
         }
 
         clear_old_input();
         flash('success', 'Sesión iniciada correctamente.');
-        redirect(base_url('admin'));
+        redirect(base_url(((bool) (auth_user()['must_change_password'] ?? false)) ? 'change-password' : 'admin'));
     }
 
-    public function showSetPassword(): void
+    public function showChangePassword(): void
     {
-        require_guest();
+        require_auth();
 
-        $email = (string) ($_SESSION['pending_password_email'] ?? '');
-
-        if ($email === '') {
-            flash('error', 'No hay una solicitud de primer acceso pendiente.');
-            redirect(base_url('login'));
-        }
-
-        render('auth/set_password', [
-            'title' => 'Crear contraseña',
-            'email' => $email,
+        render('auth/change_password', [
+            'title' => 'Cambiar contraseña',
+            'user' => auth_user(),
             'passwordPolicyText' => password_policy_text(),
         ]);
     }
 
-    public function setPassword(): void
+    public function changePassword(): void
     {
-        require_guest();
+        require_auth();
         verify_csrf();
 
-        $email = (string) ($_SESSION['pending_password_email'] ?? '');
-
-        if ($email === '') {
-            flash('error', 'No hay una solicitud de primer acceso pendiente.');
-            redirect(base_url('login'));
-        }
-
+        $user = auth_user();
+        $userId = (int) ($user['id'] ?? 0);
+        $currentPassword = (string) ($_POST['current_password'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
         $passwordConfirmation = (string) ($_POST['password_confirmation'] ?? '');
         $userModel = new UserModel();
-        $user = $userModel->findByEmail($email);
         $errors = [];
 
-        if (!$user || $userModel->hasUsablePassword($user)) {
-            unset($_SESSION['pending_password_email']);
-            flash('error', 'La cuenta ya no requiere creación de contraseña.');
+        if (!$user || $userId <= 0) {
+            Auth::logout();
+            session_start();
+            flash('error', 'Debes iniciar sesión nuevamente.');
             redirect(base_url('login'));
+        }
+
+        if (!password_verify($currentPassword, (string) ($user['password'] ?? ''))) {
+            $errors['current_password'] = 'La contraseña actual no es correcta.';
         }
 
         foreach (password_policy_errors($password) as $error) {
@@ -109,16 +106,20 @@ final class AuthController
             $errors['password_confirmation'] = 'La confirmación no coincide.';
         }
 
-        if ($errors !== []) {
-            set_validation_errors($errors);
-            flash('error', 'No fue posible crear la contraseña.');
-            redirect(base_url('set-password'));
+        if ($currentPassword !== '' && $password !== '' && hash_equals($currentPassword, $password)) {
+            $errors['password'] = 'La nueva contraseña debe ser distinta de la actual.';
         }
 
-        $userModel->updatePasswordByEmail($email, password_hash($password, PASSWORD_DEFAULT));
-        unset($_SESSION['pending_password_email']);
-        flash('success', 'Contraseña creada correctamente. Ya puedes iniciar sesión.');
-        redirect(base_url('login'));
+        if ($errors !== []) {
+            set_validation_errors($errors);
+            flash('error', 'No fue posible actualizar la contraseña.');
+            redirect(base_url('change-password'));
+        }
+
+        $userModel->markPasswordChanged($userId, password_hash($password, PASSWORD_DEFAULT));
+        $_SESSION['user'] = $userModel->find($userId);
+        flash('success', 'Contraseña actualizada correctamente.');
+        redirect(base_url('admin'));
     }
 
     public function logout(): void

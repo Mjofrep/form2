@@ -10,6 +10,8 @@ return [
         'admin_email_from' => 'no-reply@formshub.local',
         'password_reset_expires_minutes' => 60,
         'mailer_enabled' => true,
+        'login_max_attempts' => 5,
+        'login_lock_minutes' => 15,
     ],
     'mail' => [
         'enabled' => true,

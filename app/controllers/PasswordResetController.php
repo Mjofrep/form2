@@ -119,7 +119,7 @@ final class PasswordResetController
             redirect(base_url('reset-password?email=' . rawurlencode($email) . '&token=' . rawurlencode($token)));
         }
 
-        (new UserModel())->updatePassword((int) $user['id'], password_hash($password, PASSWORD_DEFAULT));
+        (new UserModel())->markPasswordChanged((int) $user['id'], password_hash($password, PASSWORD_DEFAULT));
         (new PasswordResetModel())->deleteByEmail($email);
 
         clear_old_input();

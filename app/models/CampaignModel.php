@@ -66,6 +66,15 @@ final class CampaignModel
         ];
     }
 
+    public static function uniqueIdentifierQuestionTypes(): array
+    {
+        return [
+            self::QUESTION_TEXT,
+            self::QUESTION_EMAIL,
+            self::QUESTION_NUMBER,
+        ];
+    }
+
     public function allWithSubmissionCount(): array
     {
         $sql = 'SELECT c.*, COUNT(s.id) AS submissions_count
@@ -339,6 +348,7 @@ final class CampaignModel
 
             $question['support_type'] = (string) ($settings['support_type'] ?? 'text');
             $question['support_content'] = (string) ($settings['support_content'] ?? ($question['help_text'] ?? ''));
+            $question['is_unique_identifier'] = !empty($settings['is_unique_identifier']);
         }
 
         return $questions;
@@ -424,6 +434,12 @@ final class CampaignModel
                 $settingsPayload['support_content'] = $supportContent;
             }
 
+            $isUniqueIdentifier = !empty($question['unique_identifier']);
+
+            if ($isUniqueIdentifier) {
+                $settingsPayload['is_unique_identifier'] = true;
+            }
+
             $settings = $settingsPayload !== []
                 ? json_encode($settingsPayload, JSON_UNESCAPED_UNICODE)
                 : null;
@@ -433,7 +449,7 @@ final class CampaignModel
                 'label' => $label,
                 'help_text' => $supportType === 'text' && $supportContent !== '' ? $supportContent : null,
                 'type' => $type,
-                'is_required' => !empty($question['required']) ? 1 : 0,
+                'is_required' => (!empty($question['required']) || $isUniqueIdentifier) ? 1 : 0,
                 'placeholder' => ($question['placeholder'] ?? '') !== '' ? $question['placeholder'] : null,
                 'position' => $index,
                 'settings' => $settings,

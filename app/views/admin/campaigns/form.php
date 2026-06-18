@@ -213,9 +213,18 @@ $formAction = $isEditing
                                     <div class="col-12">
                                         <div class="form-check">
                                             <input type="hidden" data-template-name="questions[__INDEX__][required]" data-name="questions[<?= e((string) $index) ?>][required]" value="0">
-                                            <input class="form-check-input" id="required_<?= e((string) $index) ?>" type="checkbox" data-template-name="questions[__INDEX__][required]" data-name="questions[<?= e((string) $index) ?>][required]" value="1" <?= !empty($question['required']) ? 'checked' : '' ?>>
+                                            <input class="form-check-input" id="required_<?= e((string) $index) ?>" type="checkbox" data-required-checkbox data-template-name="questions[__INDEX__][required]" data-name="questions[<?= e((string) $index) ?>][required]" value="1" <?= !empty($question['required']) ? 'checked' : '' ?>>
                                             <label class="form-check-label" for="required_<?= e((string) $index) ?>">Respuesta obligatoria</label>
                                         </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-check">
+                                            <input type="hidden" data-template-name="questions[__INDEX__][unique_identifier]" data-name="questions[<?= e((string) $index) ?>][unique_identifier]" value="0">
+                                            <input class="form-check-input" id="unique_identifier_<?= e((string) $index) ?>" type="checkbox" data-unique-identifier data-template-name="questions[__INDEX__][unique_identifier]" data-name="questions[<?= e((string) $index) ?>][unique_identifier]" value="1" <?= !empty($question['unique_identifier']) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="unique_identifier_<?= e((string) $index) ?>">Usar como identificador único</label>
+                                        </div>
+                                        <div class="form-text">Permite bloquear respuestas duplicadas dentro de esta campaña. Solo disponible para texto, correo y número.</div>
+                                        <?php if (error_for('questions.' . $index . '.unique_identifier')): ?><div class="text-danger small mt-1"><?= e((string) error_for('questions.' . $index . '.unique_identifier')) ?></div><?php endif; ?>
                                     </div>
                                 </div>
                             </div>
@@ -270,9 +279,17 @@ $formAction = $isEditing
                                 <div class="col-12">
                                     <div class="form-check">
                                         <input type="hidden" data-template-name="questions[__INDEX__][required]" value="0">
-                                        <input class="form-check-input" type="checkbox" data-template-name="questions[__INDEX__][required]" value="1">
+                                        <input class="form-check-input" type="checkbox" data-required-checkbox data-template-name="questions[__INDEX__][required]" value="1">
                                         <label class="form-check-label">Respuesta obligatoria</label>
                                     </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input type="hidden" data-template-name="questions[__INDEX__][unique_identifier]" value="0">
+                                        <input class="form-check-input" type="checkbox" data-unique-identifier data-template-name="questions[__INDEX__][unique_identifier]" value="1">
+                                        <label class="form-check-label">Usar como identificador único</label>
+                                    </div>
+                                    <div class="form-text">Permite bloquear respuestas duplicadas dentro de esta campaña. Solo disponible para texto, correo y número.</div>
                                 </div>
                             </div>
                         </div>

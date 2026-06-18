@@ -105,6 +105,7 @@ final class AdminCampaignController
             'support_content' => $question['support_content'] ?? ($question['help_text'] ?? ''),
             'placeholder' => $question['placeholder'],
             'required' => (int) $question['is_required'],
+            'unique_identifier' => !empty($question['is_unique_identifier']) ? 1 : 0,
             'options_text' => implode(PHP_EOL, array_map(static fn (array $option): string => $option['label'], $question['options'])),
         ], $campaign['questions']);
 
@@ -214,6 +215,7 @@ final class AdminCampaignController
         $blocks = is_array($_POST['blocks'] ?? null) ? $_POST['blocks'] : [];
         $questions = is_array($_POST['questions'] ?? null) ? $_POST['questions'] : [];
         $errors = [];
+        $uniqueIdentifierIndexes = [];
 
         if ($campaignData['name'] === '') {
             $errors['name'] = 'El nombre interno es obligatorio.';
@@ -248,6 +250,7 @@ final class AdminCampaignController
             $type = (string) ($question['type'] ?? '');
             $supportType = (string) ($question['support_type'] ?? 'text');
             $supportContent = trim((string) ($question['support_content'] ?? ''));
+            $isUniqueIdentifier = !empty($question['unique_identifier']);
 
             if ($label === '' && $type === '') {
                 continue;
@@ -271,6 +274,20 @@ final class AdminCampaignController
 
             if (in_array($type, [CampaignModel::QUESTION_SINGLE_CHOICE, CampaignModel::QUESTION_MULTIPLE_CHOICE], true) && normalize_lines($question['options_text'] ?? '') === []) {
                 $errors['questions.' . $index . '.options_text'] = 'Debes definir opciones para las preguntas de selección.';
+            }
+
+            if ($isUniqueIdentifier) {
+                if (!in_array($type, CampaignModel::uniqueIdentifierQuestionTypes(), true)) {
+                    $errors['questions.' . $index . '.unique_identifier'] = 'El identificador único solo puede usarse en preguntas de texto, correo o número.';
+                } else {
+                    $uniqueIdentifierIndexes[] = $index;
+                }
+            }
+        }
+
+        if (count($uniqueIdentifierIndexes) > 1) {
+            foreach ($uniqueIdentifierIndexes as $index) {
+                $errors['questions.' . $index . '.unique_identifier'] = 'Solo puedes marcar una pregunta como identificador único por campaña.';
             }
         }
 

@@ -26,6 +26,13 @@
         <?php endif; ?>
         <div class="d-flex align-items-center gap-2 ms-auto">
             <?php if ($showUserMenu && $currentUser): ?>
+                <a class="btn btn-outline-secondary btn-sm" href="<?= e(base_url('admin')) ?>">Campañas</a>
+                <?php if (($currentUser['role'] ?? '') === \App\Models\UserModel::ROLE_ADMIN): ?>
+                    <a class="btn btn-outline-secondary btn-sm" href="<?= e(base_url('admin/users')) ?>">Usuarios</a>
+                <?php endif; ?>
+                <a class="btn btn-outline-secondary btn-sm" href="<?= e(base_url('change-password')) ?>">Mi clave</a>
+            <?php endif; ?>
+            <?php if ($showUserMenu && $currentUser): ?>
                 <span class="text-secondary small"><?= e($currentUser['email']) ?></span>
                 <form method="post" action="<?= e(base_url('logout')) ?>" class="m-0">
                     <?= csrf_field() ?>

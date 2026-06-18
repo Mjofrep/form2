@@ -6,10 +6,6 @@
                 <p class="text-secondary mb-0">Solo usuarios autorizados pueden acceder al panel.</p>
             </div>
 
-            <div class="alert alert-light border small mb-4">
-                Si tu cuenta aún no tiene contraseña, ingresa solo tu correo y el sistema te solicitará crearla.
-            </div>
-
             <form method="post" action="<?= e(base_url('login')) ?>" class="vstack gap-3">
                 <?= csrf_field() ?>
                 <div>

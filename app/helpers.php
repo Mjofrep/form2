@@ -168,6 +168,25 @@ function require_auth(): void
         flash('error', 'Debes iniciar sesión para continuar.');
         redirect(base_url('login'));
     }
+
+    $user = auth_user();
+
+    if (($user['must_change_password'] ?? false) && request_path() !== '/change-password') {
+        flash('info', 'Debes cambiar tu contraseña antes de continuar.');
+        redirect(base_url('change-password'));
+    }
+}
+
+function require_role(string $role): void
+{
+    require_auth();
+
+    $user = auth_user();
+
+    if (($user['role'] ?? '') !== $role) {
+        http_response_code(403);
+        exit('No autorizado.');
+    }
 }
 
 function render(string $view, array $data = [], string $layout = 'layouts/main'): void

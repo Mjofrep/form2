@@ -1,10 +1,16 @@
 USE form2;
 
-INSERT INTO users (name, email, password, created_at, updated_at)
-VALUES ('Administrador Forms Hub', 'admin@formshub.local', '$2y$12$DRJ8tB3P6T3E20hzX4XcRuYHNnXwMmOJOJM/48UuT86AobMAkO.Qq', NOW(), NOW())
+INSERT INTO users (name, email, password, role, is_active, must_change_password, failed_login_attempts, locked_until, last_login_at, created_at, updated_at)
+VALUES ('Administrador Forms Hub', 'admin@formshub.local', '$2y$12$DRJ8tB3P6T3E20hzX4XcRuYHNnXwMmOJOJM/48UuT86AobMAkO.Qq', 'admin', 1, 0, 0, NULL, NULL, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),
     password = VALUES(password),
+    role = VALUES(role),
+    is_active = VALUES(is_active),
+    must_change_password = VALUES(must_change_password),
+    failed_login_attempts = VALUES(failed_login_attempts),
+    locked_until = VALUES(locked_until),
+    last_login_at = VALUES(last_login_at),
     updated_at = NOW();
 
 INSERT INTO campaigns (id, name, token, type, status, title, description, thank_you_message, published_at, created_at, updated_at)

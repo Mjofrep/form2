@@ -82,6 +82,8 @@ final class PublicCampaignController
                         $errors['answers.' . $id] = 'La pregunta ' . $label . ' es obligatoria.';
                     } elseif ($value !== null && strlen(trim((string) $value)) > 4000) {
                         $errors['answers.' . $id] = 'La pregunta ' . $label . ' supera el largo permitido.';
+                    } elseif ($value !== null && trim((string) $value) !== '' && $this->shouldValidateRut($label) && !$this->isValidRut((string) $value)) {
+                        $errors['answers.' . $id] = 'La pregunta ' . $label . ' debe contener un RUT valido.';
                     }
                     break;
 
@@ -161,9 +163,102 @@ final class PublicCampaignController
                     }
                     break;
             }
+
+            if (!isset($errors['answers.' . $id]) && $this->usesUniqueIdentifier($question) && $value !== null && trim((string) $value) !== '') {
+                if ($this->hasDuplicateUniqueIdentifier($campaign, $question, (string) $value)) {
+                    $errors['answers.' . $id] = 'Ya existe un registro con ese identificador en esta campaña.';
+                }
+            }
         }
 
         return [$errors, $answers, $files];
+    }
+
+    private function usesUniqueIdentifier(array $question): bool
+    {
+        return !empty($question['is_unique_identifier']);
+    }
+
+    private function hasDuplicateUniqueIdentifier(array $campaign, array $question, string $value): bool
+    {
+        $normalizedValue = $this->normalizeUniqueIdentifierValue($question, $value);
+
+        foreach ($campaign['submissions'] as $submission) {
+            foreach ($submission['answers'] as $answer) {
+                if ((int) ($answer['question_id'] ?? 0) !== (int) $question['id']) {
+                    continue;
+                }
+
+                $existingValue = (string) ($answer['value_text'] ?? '');
+
+                if ($existingValue === '') {
+                    continue;
+                }
+
+                if ($this->normalizeUniqueIdentifierValue($question, $existingValue) === $normalizedValue) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function normalizeUniqueIdentifierValue(array $question, string $value): string
+    {
+        $normalized = trim($value);
+
+        if ($question['type'] === CampaignModel::QUESTION_EMAIL) {
+            return strtolower($normalized);
+        }
+
+        if ($question['type'] === CampaignModel::QUESTION_TEXT) {
+            if ($this->shouldValidateRut((string) ($question['label'] ?? ''))) {
+                return strtoupper((string) preg_replace('/[^0-9kK]/', '', $normalized));
+            }
+
+            return strtolower($normalized);
+        }
+
+        return $normalized;
+    }
+
+    private function shouldValidateRut(string $label): bool
+    {
+        return stripos($label, 'rut') !== false;
+    }
+
+    private function isValidRut(string $value): bool
+    {
+        $normalized = preg_replace('/[^0-9kK]/', '', $value);
+
+        if (!is_string($normalized) || strlen($normalized) < 2) {
+            return false;
+        }
+
+        $body = substr($normalized, 0, -1);
+        $checkDigit = strtoupper(substr($normalized, -1));
+
+        if ($body === '' || !ctype_digit($body)) {
+            return false;
+        }
+
+        $sum = 0;
+        $multiplier = 2;
+
+        for ($i = strlen($body) - 1; $i >= 0; $i--) {
+            $sum += ((int) $body[$i]) * $multiplier;
+            $multiplier = $multiplier === 7 ? 2 : $multiplier + 1;
+        }
+
+        $remainder = 11 - ($sum % 11);
+        $expectedDigit = match ($remainder) {
+            11 => '0',
+            10 => 'K',
+            default => (string) $remainder,
+        };
+
+        return $checkDigit === $expectedDigit;
     }
 
     private function normalizeAnswerFiles(): array

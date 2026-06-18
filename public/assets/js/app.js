@@ -24,6 +24,55 @@ const syncQuestionVisibility = (item) => {
     }
 };
 
+const isUniqueIdentifierTypeAllowed = (type) => ['text', 'email', 'number'].includes(type);
+
+const syncUniqueIdentifierState = (item) => {
+    const select = item.querySelector('[data-question-type]');
+    const uniqueCheckbox = item.querySelector('[data-unique-identifier]');
+    const requiredCheckbox = item.querySelector('[data-required-checkbox]');
+
+    if (!select || !uniqueCheckbox) {
+        return;
+    }
+
+    const isAllowed = isUniqueIdentifierTypeAllowed(select.value);
+
+    uniqueCheckbox.disabled = !isAllowed;
+
+    if (!isAllowed) {
+        uniqueCheckbox.checked = false;
+    }
+
+    if (requiredCheckbox) {
+        if (uniqueCheckbox.checked) {
+            requiredCheckbox.checked = true;
+        }
+
+        requiredCheckbox.disabled = uniqueCheckbox.checked;
+    }
+};
+
+const syncUniqueIdentifierSelection = (item) => {
+    const currentCheckbox = item.querySelector('[data-unique-identifier]');
+    const repeaterList = item.closest('[data-repeater-list]');
+
+    if (!currentCheckbox?.checked || !repeaterList) {
+        return;
+    }
+
+    repeaterList.querySelectorAll('[data-repeater-item]').forEach((candidate) => {
+        if (candidate === item) {
+            return;
+        }
+
+        const checkbox = candidate.querySelector('[data-unique-identifier]');
+
+        if (checkbox) {
+            checkbox.checked = false;
+        }
+    });
+};
+
 const syncSupportVisibility = (item) => {
     const select = item.querySelector('[data-support-type]');
 
@@ -69,6 +118,8 @@ const updateRepeaterIndexes = (wrapper) => {
         syncQuestionVisibility(item);
         syncSupportVisibility(item);
         syncBlockVisibility(item);
+        syncUniqueIdentifierSelection(item);
+        syncUniqueIdentifierState(item);
     });
 };
 
@@ -109,6 +160,8 @@ const bootRepeaters = () => {
             syncQuestionVisibility(item);
             syncSupportVisibility(item);
             syncBlockVisibility(item);
+            syncUniqueIdentifierSelection(item);
+            syncUniqueIdentifierState(item);
         });
 
         if (list) {
